@@ -24,10 +24,7 @@ import {
   ZoomOut as ZoomOutIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import VisitedCountries from "./VisitedCountries";
-
-const geoUrl =
-  "https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_50m_admin_0_countries.geojson";
+import { CircularProgress, Backdrop, Skeleton, Stack } from "@mui/material";
 
 const Map = () => {
   const theme = useTheme();
@@ -39,24 +36,49 @@ const Map = () => {
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState([0, 20]);
   const navigate = useNavigate();
-  const visitedCountries = VisitedCountries();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isTooltipLocked, setIsTooltipLocked] = useState(false);
+  const [selectedGeo, setSelectedGeo] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
   useEffect(() => {
-    fetch(geoUrl)
-      .then((response) => {
-        if (!response.ok) throw new Error("Failed to fetch GeoJSON");
-        return response.json();
-      })
-      .then((data) => {
-        const countryList = data.features.map((feature) => ({
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // const response = await fetch("https://mletr-tracking-backend.onrender.com/geojson");
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5001/geojson", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const geoData = await response.json();
+        const geoJsonData = geoData[0];
+
+        const countryList = geoJsonData.features.map((feature) => ({
           iso_a3: feature.properties.iso_a3,
           label: feature.properties.name_long,
           properties: feature.properties,
+          level: feature.properties.mletr_level || 0,
+          notes: feature.properties.notes,
         }));
+
         setCountries(countryList);
-        setMapData(data);
-      })
-      .catch((error) => console.error("Error fetching GeoJSON:", error));
+        setMapData(geoJsonData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const colorGrades = {
@@ -72,31 +94,91 @@ const Map = () => {
     { label: "ETR-DISCUSSION BETWEEN STAKEHOLDERS", level: 2 },
     { label: "ETR-COMPLIANT", level: 3 },
   ];
+  useEffect(() => {
+    if (!isLoggedIn) {
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        navigate("/login");
+      }
+    }
+  }, [isLoggedIn, navigate]);
+
+  const handleLoginLogout = () => {
+    if (isLoggedIn) {
+      localStorage.removeItem("authToken");
+      setIsLoggedIn(false);
+    } else {
+      navigate("/login");
+    }
+  };
 
   const getColorForCountry = (geo) => {
-    if (selectedCountry && selectedCountry.iso_a3 === geo.properties.iso_a3) {
+    const isSelected =
+      (selectedGeo &&
+        selectedGeo.properties.iso_a3 === geo.properties.iso_a3) ||
+      (selectedCountry && selectedCountry.iso_a3 === geo.properties.iso_a3);
+
+    if (isSelected) {
       return "#FDD835";
     }
-    const country = visitedCountries.find(
-      (c) => c.iso_a3 === geo.properties.iso_a3
-    );
-    return country ? colorGrades[country.level] : colorGrades[0];
+
+    const level = geo.properties.mletr_level || 0;
+    return colorGrades[level];
   };
 
   const handleCountrySelect = (event, value) => {
     setSelectedCountry(value);
+    setIsTooltipLocked(!!value);
+    setSelectedGeo(null);
+
     if (value) {
       setHoveredCountry({
         name: value.label,
-        ...visitedCountries.find((c) => c.iso_a3 === value.iso_a3),
+        level: value.level,
+        notes: value.notes,
+        iso_a3: value.iso_a3,
       });
     } else {
       setHoveredCountry(null);
     }
   };
 
+  const handleGeographyClick = (geo) => {
+    if (!isTooltipLocked) {
+      setIsTooltipLocked(true);
+      setSelectedGeo(geo);
+      setHoveredCountry({
+        name: geo.properties.name_long,
+        iso_a3: geo.properties.iso_a3,
+        level: geo.properties.mletr_level || 0,
+        notes: geo.properties.notes,
+      });
+    } else {
+      setIsTooltipLocked(false);
+      setSelectedGeo(null);
+      setHoveredCountry(null);
+    }
+  };
+
+  const handleMouseEnter = (geo) => {
+    if (!isTooltipLocked && !selectedCountry) {
+      setHoveredCountry({
+        name: geo.properties.name_long,
+        iso_a3: geo.properties.iso_a3,
+        level: geo.properties.mletr_level || 0,
+        notes: geo.properties.notes,
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isTooltipLocked && !selectedCountry) {
+      setHoveredCountry(null);
+    }
+  };
+
   const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev * 1.5, 40));
+    setZoom((prev) => Math.min(prev * 1.5, 250));
   };
 
   const handleZoomOut = () => {
@@ -104,8 +186,18 @@ const Map = () => {
   };
 
   const handleViewMore = () => {
-    if (hoveredCountry) {
-      navigate(`/country/${hoveredCountry.iso_a3}`, { state: hoveredCountry });
+    if (selectedGeo || selectedCountry) {
+      const countryData = selectedGeo
+        ? {
+            ...hoveredCountry,
+            properties: selectedGeo.properties,
+          }
+        : {
+            ...hoveredCountry,
+            properties: selectedCountry.properties,
+          };
+
+      navigate(`/country/${hoveredCountry.iso_a3}`, { state: countryData });
     }
   };
 
@@ -113,6 +205,143 @@ const Map = () => {
     setZoom(newZoom);
     setCenter(coordinates);
   };
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#e6ffff",
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            textAlign: "center",
+            maxWidth: 400,
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+          }}
+        >
+          <Typography variant="h6" color="error" gutterBottom>
+            Unable to Load Map Data
+          </Typography>
+          <Typography color="text.secondary">{error}</Typography>
+        </Paper>
+      </Box>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          backgroundColor: "#e6ffff",
+        }}
+      >
+        {/* Header Skeleton */}
+        <Box sx={{ backgroundColor: "#008080", pb: 2 }}>
+          <Toolbar sx={{ justifyContent: "space-between" }}>
+            <Skeleton
+              variant="rectangular"
+              width={200}
+              height={32}
+              sx={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+            />
+            <Skeleton
+              variant="rectangular"
+              width={300}
+              height={40}
+              sx={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+            />
+          </Toolbar>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ px: 2, mt: 2 }}
+            justifyContent="center"
+          >
+            {[1, 2, 3, 4].map((item) => (
+              <Skeleton
+                key={item}
+                variant="rectangular"
+                width={150}
+                height={24}
+                sx={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+              />
+            ))}
+          </Stack>
+        </Box>
+
+        {/* Map Loading Animation */}
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "calc(100vh - 144px)",
+            position: "relative",
+          }}
+        >
+          <Backdrop
+            open={true}
+            sx={{
+              position: "absolute",
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              zIndex: 1,
+            }}
+          >
+            <Stack spacing={3} alignItems="center">
+              <CircularProgress
+                size={60}
+                thickness={4}
+                sx={{
+                  color: "#008080",
+                  "& .MuiCircularProgress-circle": {
+                    strokeLinecap: "round",
+                  },
+                }}
+              />
+              <Typography
+                variant="h6"
+                sx={{
+                  color: "#006666",
+                  fontWeight: 500,
+                  textAlign: "center",
+                }}
+              >
+                Loading Map Data...
+              </Typography>
+            </Stack>
+          </Backdrop>
+          <Box
+            sx={{
+              width: "95%",
+              height: "100%",
+              border: "2px solid black",
+              borderRadius: 2,
+              backgroundColor: "white",
+              overflow: "hidden",
+            }}
+          >
+            <Skeleton
+              variant="rectangular"
+              width="100%"
+              height="100%"
+              animation="wave"
+              sx={{ backgroundColor: "rgba(0,0,0,0.04)" }}
+            />
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -123,94 +352,124 @@ const Map = () => {
         backgroundColor: "#e6ffff",
       }}
     >
-      <AppBar
-        position="sticky"
-        elevation={4}
-        sx={{ backgroundColor: "#008080" }}
-      >
-        <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Typography
-            variant="h5"
-            component="div"
+    <AppBar position="sticky" elevation={4} sx={{ backgroundColor: "#008080" }}>
+  <Toolbar
+    sx={{
+      justifyContent: "space-between",
+      flexWrap: { xs: "wrap", sm: "nowrap" },
+      gap: 2,
+    }}
+  >
+    <Typography
+      variant="h5"
+      component="div"
+      sx={{
+        fontWeight: "600",
+        letterSpacing: "1px",
+        color: "#fff",
+        textAlign: { xs: "center", sm: "left" },
+        flex: { xs: "1 1 100%", sm: "unset" }, // Ensures title stays on one line on bigger screens
+        whiteSpace: "nowrap", // Prevents wrapping
+      }}
+    >
+      ETR Tracking System
+    </Typography>
+
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        flexGrow: 1,
+        width: "100%",
+        justifyContent: { xs: "center", sm: "flex-end" },
+      }}
+    >
+      <Autocomplete
+        options={countries}
+        value={selectedCountry}
+        onChange={handleCountrySelect}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            placeholder="Search Countries"
+            variant="outlined"
+            size="small"
             sx={{
-              fontWeight: "600",
-              letterSpacing: "1px",
-              color: "#fff",
-              textAlign: "center",
+              width: { xs: "100%", sm: "300px" }, // Makes the search field take more width on larger screens
+              bgcolor: "rgba(255, 255, 255, 0.15)",
+              borderRadius: 1,
+              "& .MuiOutlinedInput-root": {
+                color: "white",
+                "& fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.5)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(255, 255, 255, 0.7)",
+              },
             }}
-          >
-            ETR Tracking System
-          </Typography>
+          />
+        )}
+      />
 
-          <Box sx={{ flexGrow: 1, mx: 2, maxWidth: 500 }}>
-            <Autocomplete
-              options={countries}
-              value={selectedCountry}
-              onChange={handleCountrySelect}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Search Countries"
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    bgcolor: "rgba(255, 255, 255, 0.15)",
-                    borderRadius: 1,
-                    "& .MuiOutlinedInput-root": {
-                      color: "white",
-                      "& fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.3)",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.5)",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "white",
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      color: "rgba(255, 255, 255, 0.7)",
-                    },
-                  }}
-                />
-              )}
-            />
-          </Box>
-        </Toolbar>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={handleLoginLogout}
+        sx={{
+          bgcolor: "rgba(255, 255, 255, 0.15)",
+          color: "#fff",
+          whiteSpace: "nowrap",
+          "&:hover": {
+            bgcolor: "rgba(255, 255, 255, 0.3)",
+          },
+        }}
+      >
+        {isLoggedIn ? "Logout" : "Login"}
+      </Button>
+    </Box>
+  </Toolbar>
 
-        <Paper
-          elevation={0}
+  <Paper
+    elevation={0}
+    sx={{
+      bgcolor: "#006666",
+      color: "white",
+      px: 2,
+      py: 1,
+      display: "flex",
+      gap: 2,
+      flexWrap: "wrap",
+      justifyContent: "center",
+    }}
+  >
+    {legendItems.map((item, index) => (
+      <Box
+        key={index}
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        <Box
           sx={{
-            bgcolor: "#006666",
-            color: "white",
-            px: 2,
-            py: 1,
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
+            width: 16,
+            height: 16,
+            borderRadius: 1,
+            bgcolor: colorGrades[item.level],
+            border: 1,
+            borderColor: "grey.300",
           }}
-        >
-          {legendItems.map((item, index) => (
-            <Box
-              key={index}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <Box
-                sx={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: 1,
-                  bgcolor: colorGrades[item.level],
-                  border: 1,
-                  borderColor: "grey.300",
-                }}
-              />
-              <Typography variant="body2">{item.label}</Typography>
-            </Box>
-          ))}
-        </Paper>
-      </AppBar>
+        />
+        <Typography variant="body2">{item.label}</Typography>
+      </Box>
+    ))}
+  </Paper>
+</AppBar>
 
       <Box
         sx={{
@@ -235,7 +494,7 @@ const Map = () => {
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{
-              scale: isMobile ? 100 : 220,
+              scale: isMobile ? 300 : 220,
             }}
             style={{ width: "100%", height: "100%" }}
           >
@@ -243,7 +502,7 @@ const Map = () => {
               zoom={zoom}
               center={center}
               onMoveEnd={handleMoveEnd}
-              maxZoom={40}
+              maxZoom={250}
               minZoom={0.2}
             >
               {mapData && (
@@ -259,32 +518,20 @@ const Map = () => {
                         style={{
                           default: { outline: "none" },
                           hover: {
-                            fill: theme.palette.warning.light,
+                            fill: !isTooltipLocked
+                              ? theme.palette.warning.light
+                              : getColorForCountry(geo),
                             outline: "none",
-                            cursor: "pointer",
+                            cursor: isTooltipLocked ? "default" : "pointer",
                           },
                           pressed: {
                             fill: theme.palette.warning.main,
                             outline: "none",
                           },
                         }}
-                        onMouseEnter={() => {
-                          if (!selectedCountry) {
-                            const countryData = visitedCountries.find(
-                              (c) => c.iso_a3 === geo.properties.iso_a3
-                            );
-                            setHoveredCountry({
-                              name: geo.properties.name_long,
-                              iso_a3: geo.properties.iso_a3,
-                              ...countryData,
-                            });
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          if (!selectedCountry) {
-                            setHoveredCountry(null);
-                          }
-                        }}
+                        onClick={() => handleGeographyClick(geo)}
+                        onMouseEnter={() => handleMouseEnter(geo)}
+                        onMouseLeave={handleMouseLeave}
                       />
                     ))
                   }
@@ -355,7 +602,7 @@ const Map = () => {
               <Button
                 variant="contained"
                 fullWidth
-                sx={{ mt: 2,backgroundColor:"#006666" }}
+                sx={{ mt: 2, backgroundColor: "#006666" }}
                 onClick={handleViewMore}
               >
                 View Details

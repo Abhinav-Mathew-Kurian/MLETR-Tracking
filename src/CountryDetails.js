@@ -17,8 +17,26 @@ import Swal from "sweetalert2";
 
 const CountryDetails = () => {
   const { state } = useLocation();
-  const country = state;
   const navigate = useNavigate();
+
+  // Modify to use the properties from the geojson data structure
+  const country = state
+    ? {
+        ...state,
+        name: state.name || state.properties?.name_long,
+        iso_a3: state.iso_a3 || state.properties?.iso_a3,
+        level: state.level || state.properties?.mletr_level || 0,
+        image: state.properties?.image,
+        bgImage: state.properties?.bgImage,
+        notes: state.properties?.notes,
+        point1: state.properties?.point1,
+        point2: state.properties?.point2,
+        point3: state.properties?.point3,
+        journey1: state.properties?.journey1,
+        journey2: state.properties?.journey2,
+        journey3: state.properties?.journey3,
+      }
+    : null;
 
   const handleBack = () => {
     navigate("/");
@@ -28,7 +46,7 @@ const CountryDetails = () => {
 
   useEffect(() => {
     const showAlert = async () => {
-      if (country?.level === undefined) {
+      if (country?.level === 0) {
         await Swal.fire({
           title: "Limited Data Available",
           text: "This country's interaction with MLETR is minimal, more data will be updated shortly.",
@@ -56,7 +74,7 @@ const CountryDetails = () => {
             mb: 3,
             fontWeight: "700",
             color: "#1e293b",
-            fontSize: "1.5rem"
+            fontSize: "1.5rem",
           }}
         >
           Understanding MLETR
@@ -67,10 +85,13 @@ const CountryDetails = () => {
             color: "#475569",
             lineHeight: 1.8,
             fontSize: "1.1rem",
-            mb: 2
+            mb: 2,
           }}
         >
-          The Model Law on Electronic Transferable Records (MLETR) is a landmark legal framework adopted by UNCITRAL in 2017. It enables the legal use of electronic transferable records both domestically and across borders.
+          The Model Law on Electronic Transferable Records (MLETR) is a landmark
+          legal framework adopted by UNCITRAL in 2017. It enables the legal use
+          of electronic transferable records both domestically and across
+          borders.
         </Typography>
 
         <Typography
@@ -80,7 +101,7 @@ const CountryDetails = () => {
             mb: 2,
             fontWeight: "700",
             color: "#1e293b",
-            fontSize: "1.3rem"
+            fontSize: "1.3rem",
           }}
         >
           MLETR Implementation Levels
@@ -93,7 +114,7 @@ const CountryDetails = () => {
               fontWeight: "600",
               color: "#1e293b",
               fontSize: "1.1rem",
-              mb: 1
+              mb: 1,
             }}
           >
             Level 0
@@ -104,10 +125,11 @@ const CountryDetails = () => {
               color: "#475569",
               lineHeight: 1.8,
               fontSize: "1.1rem",
-              mb: 2
+              mb: 2,
             }}
           >
-            Initial stage where countries are exploring or considering MLETR adoption. No formal implementation steps have been taken yet.
+            Initial stage where countries are exploring or considering MLETR
+            adoption. No formal implementation steps have been taken yet.
           </Typography>
         </div>
 
@@ -118,7 +140,7 @@ const CountryDetails = () => {
               fontWeight: "600",
               color: "#1e293b",
               fontSize: "1.1rem",
-              mb: 1
+              mb: 1,
             }}
           >
             Level 1
@@ -129,10 +151,11 @@ const CountryDetails = () => {
               color: "#475569",
               lineHeight: 1.8,
               fontSize: "1.1rem",
-              mb: 2
+              mb: 2,
             }}
           >
-            Countries have begun the formal process of MLETR adoption. This includes initial legal assessments and stakeholder consultations.
+            Countries have begun the formal process of MLETR adoption. This
+            includes initial legal assessments and stakeholder consultations.
           </Typography>
         </div>
 
@@ -143,7 +166,7 @@ const CountryDetails = () => {
               fontWeight: "600",
               color: "#1e293b",
               fontSize: "1.1rem",
-              mb: 1
+              mb: 1,
             }}
           >
             Level 2
@@ -154,10 +177,11 @@ const CountryDetails = () => {
               color: "#475569",
               lineHeight: 1.8,
               fontSize: "1.1rem",
-              mb: 2
+              mb: 2,
             }}
           >
-            Advanced implementation stage with draft legislation or regulations in place. Technical frameworks are being developed.
+            Advanced implementation stage with draft legislation or regulations
+            in place. Technical frameworks are being developed.
           </Typography>
         </div>
 
@@ -168,7 +192,7 @@ const CountryDetails = () => {
               fontWeight: "600",
               color: "#1e293b",
               fontSize: "1.1rem",
-              mb: 1
+              mb: 1,
             }}
           >
             Level 3
@@ -179,10 +203,12 @@ const CountryDetails = () => {
               color: "#475569",
               lineHeight: 1.8,
               fontSize: "1.1rem",
-              mb: 2
+              mb: 2,
             }}
           >
-            Full MLETR implementation with enacted legislation and operational systems. The country actively uses electronic transferable records in trade.
+            Full MLETR implementation with enacted legislation and operational
+            systems. The country actively uses electronic transferable records
+            in trade.
           </Typography>
         </div>
 
@@ -194,63 +220,75 @@ const CountryDetails = () => {
             mb: 2,
             fontWeight: "700",
             color: "#1e293b",
-            fontSize: "1.3rem"
+            fontSize: "1.3rem",
           }}
         >
           Key Benefits
         </Typography>
         <List>
-          <ListItem sx={{ display: 'list-item', py: 1 }}>
+          <ListItem sx={{ display: "list-item", py: 1 }}>
             <ListItemText
               primary="Establishes functional equivalence between electronic and paper-based transferable documents"
               sx={{
-                '& .MuiListItemText-primary': {
-                  fontSize: '1.1rem',
-                  color: '#475569'
-                }
+                "& .MuiListItemText-primary": {
+                  fontSize: "1.1rem",
+                  color: "#475569",
+                },
               }}
             />
           </ListItem>
-          <ListItem sx={{ display: 'list-item', py: 1 }}>
+          <ListItem sx={{ display: "list-item", py: 1 }}>
             <ListItemText
               primary="Supports cross-border trade and commerce through digital transformation"
               sx={{
-                '& .MuiListItemText-primary': {
-                  fontSize: '1.1rem',
-                  color: '#475569'
-                }
+                "& .MuiListItemText-primary": {
+                  fontSize: "1.1rem",
+                  color: "#475569",
+                },
               }}
             />
           </ListItem>
-          <ListItem sx={{ display: 'list-item', py: 1 }}>
+          <ListItem sx={{ display: "list-item", py: 1 }}>
             <ListItemText
               primary="Promotes paperless trade while maintaining legal certainty"
               sx={{
-                '& .MuiListItemText-primary': {
-                  fontSize: '1.1rem',
-                  color: '#475569'
-                }
+                "& .MuiListItemText-primary": {
+                  fontSize: "1.1rem",
+                  color: "#475569",
+                },
               }}
             />
           </ListItem>
         </List>
+        <img
+                  src="https://orbitshub.com/wp-content/uploads/2023/01/Top-10-Shipyards-in-India.png"
+                  alt="Common pic"
+                  style={{
+                    marginTop: "50px",
+                    width: "100%",
+                    borderRadius: "12px",
+                    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.15)",
+                  }}
+                />
       </CardContent>
     </Card>
   );
 
   return (
     <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
-      <Paper 
+      <Paper
         elevation={0}
         sx={{
-          background: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${country?.bgImage || 'https://via.placeholder.com/1920x400'})`,
+          background: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${
+            country?.bgImage || "https://via.placeholder.com/1920x400"
+          })`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           padding: "40px 20px",
           borderRadius: 0,
           position: "relative",
           height: "40vh",
-          mb: 4
+          mb: 4,
         }}
       >
         <Button
@@ -264,7 +302,7 @@ const CountryDetails = () => {
             backgroundColor: "#00663d",
             "&:hover": { backgroundColor: "#004d2e" },
             fontSize: "1rem",
-            padding: "10px 20px"
+            padding: "10px 20px",
           }}
         >
           Back
@@ -278,23 +316,23 @@ const CountryDetails = () => {
             textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
             mt: 15,
             fontSize: {
-              xs: '2.5rem',
-              md: '3.5rem'
+              xs: "2.5rem",
+              md: "3.5rem",
             },
-            letterSpacing: "0.02em"
+            letterSpacing: "0.02em",
           }}
         >
-          {country.name ? `${country.name} - ETR Details` : "Country Details"}
+          {country?.name ? `${country.name} - ETR Details` : "Country Details"}
         </Typography>
       </Paper>
 
       {hasData ? (
         <Grid container spacing={4} sx={{ px: { xs: 2, md: 4 }, mb: 4 }}>
           <Grid item xs={12} md={5}>
-            <Card elevation={3} sx={{ height: 'auto', borderRadius: 2 }}>
+            <Card elevation={3} sx={{ height: "auto", borderRadius: 2 }}>
               <CardContent sx={{ p: 4 }}>
                 {country.image && (
-                  <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                  <div style={{ textAlign: "center", marginBottom: "2rem" }}>
                     <img
                       src={country.image}
                       alt={`${country.name} Flag`}
@@ -307,16 +345,6 @@ const CountryDetails = () => {
                   </div>
                 )}
                 <MLETRInfo />
-                <img
-                  src="https://orbitshub.com/wp-content/uploads/2023/01/Top-10-Shipyards-in-India.png"
-                  alt="Common pic"
-                  style={{
-                    marginTop: "50px",
-                    width: "100%",
-                    borderRadius: "12px",
-                    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.15)",
-                  }}
-                />
               </CardContent>
             </Card>
           </Grid>
@@ -324,28 +352,28 @@ const CountryDetails = () => {
           <Grid item xs={12} md={7}>
             <Card elevation={3} sx={{ borderRadius: 2 }}>
               <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                <Typography 
-                  variant="h3" 
-                  sx={{ 
-                    mb: 3, 
+                <Typography
+                  variant="h3"
+                  sx={{
+                    mb: 3,
                     fontWeight: "800",
                     color: "#1e293b",
                     fontSize: {
-                      xs: '2rem',
-                      md: '2.5rem'
-                    }
+                      xs: "2rem",
+                      md: "2.5rem",
+                    },
                   }}
                 >
                   {country.name}
                 </Typography>
-                
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    mb: 2, 
+
+                <Typography
+                  variant="h5"
+                  sx={{
+                    mb: 2,
                     color: "#475569",
                     fontSize: "1.5rem",
-                    fontWeight: "600"
+                    fontWeight: "600",
                   }}
                 >
                   ISO Code: {country.iso_a3 || "N/A"}
@@ -353,14 +381,14 @@ const CountryDetails = () => {
 
                 <Divider sx={{ my: 4 }} />
 
-                <div style={{ marginBottom: '3rem' }}>
-                  <Typography 
-                    variant="h5" 
-                    sx={{ 
-                      mb: 3, 
-                      fontWeight: "700", 
+                <div style={{ marginBottom: "3rem" }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      mb: 3,
+                      fontWeight: "700",
                       color: "#1e293b",
-                      fontSize: "1.8rem"
+                      fontSize: "1.8rem",
                     }}
                   >
                     MLETR Status
@@ -368,16 +396,23 @@ const CountryDetails = () => {
                   <Paper
                     elevation={0}
                     sx={{
-                      display: 'inline-block',
+                      display: "inline-block",
                       px: 4,
                       py: 2,
                       borderRadius: 3,
-                      backgroundColor: country.level ? "rgba(56, 161, 255, 0.1)" : "rgba(169, 169, 169, 0.1)",
-                      color: country.level ? "#2563eb" : "#64748b"
+                      backgroundColor: country.level
+                        ? "rgba(56, 161, 255, 0.1)"
+                        : "rgba(169, 169, 169, 0.1)",
+                      color: country.level ? "#2563eb" : "#64748b",
                     }}
                   >
-                    <Typography variant="h6" sx={{ fontSize: "1.4rem", fontWeight: "600" }}>
-                      {country.level !== undefined ? `Level ${country.level}` : "Not Available"}
+                    <Typography
+                      variant="h6"
+                      sx={{ fontSize: "1.4rem", fontWeight: "600" }}
+                    >
+                      {country.level !== undefined
+                        ? `Level ${country.level}`
+                        : "Not Available"}
                     </Typography>
                   </Paper>
                 </div>
@@ -385,25 +420,25 @@ const CountryDetails = () => {
                 {country.notes && (
                   <>
                     <Divider sx={{ my: 4 }} />
-                    <div style={{ marginBottom: '3rem' }}>
-                      <Typography 
-                        variant="h5" 
-                        sx={{ 
-                          mb: 3, 
-                          fontWeight: "700", 
+                    <div style={{ marginBottom: "3rem" }}>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          mb: 3,
+                          fontWeight: "700",
                           color: "#1e293b",
-                          fontSize: "1.8rem"
+                          fontSize: "1.8rem",
                         }}
                       >
                         Approach
                       </Typography>
-                      <Typography 
-                        variant="body1" 
-                        sx={{ 
-                          color: "#475569", 
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "#475569",
                           lineHeight: 2,
                           fontSize: "1.2rem",
-                          letterSpacing: "0.015em"
+                          letterSpacing: "0.015em",
                         }}
                       >
                         {country.notes}
@@ -415,60 +450,60 @@ const CountryDetails = () => {
                 {(country.point1 || country.point2 || country.point3) && (
                   <>
                     <Divider sx={{ my: 4 }} />
-                    <div style={{ marginBottom: '3rem' }}>
-                      <Typography 
-                        variant="h5" 
-                        sx={{ 
-                          mb: 3, 
-                          fontWeight: "700", 
+                    <div style={{ marginBottom: "3rem" }}>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          mb: 3,
+                          fontWeight: "700",
                           color: "#1e293b",
-                          fontSize: "1.8rem"
+                          fontSize: "1.8rem",
                         }}
                       >
                         Key Stages
                       </Typography>
                       <List sx={{ pl: 2 }}>
                         {country.point1 && (
-                          <ListItem sx={{ display: 'list-item', py: 1.5 }}>
-                            <ListItemText 
+                          <ListItem sx={{ display: "list-item", py: 1.5 }}>
+                            <ListItemText
                               primary={country.point1}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '1.2rem',
+                                "& .MuiListItemText-primary": {
+                                  fontSize: "1.2rem",
                                   lineHeight: 1.8,
-                                  color: '#475569',
-                                  fontWeight: 500
-                                }
+                                  color: "#475569",
+                                  fontWeight: 500,
+                                },
                               }}
                             />
                           </ListItem>
                         )}
                         {country.point2 && (
-                          <ListItem sx={{ display: 'list-item', py: 1.5 }}>
-                            <ListItemText 
+                          <ListItem sx={{ display: "list-item", py: 1.5 }}>
+                            <ListItemText
                               primary={country.point2}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '1.2rem',
+                                "& .MuiListItemText-primary": {
+                                  fontSize: "1.2rem",
                                   lineHeight: 1.8,
-                                  color: '#475569',
-                                  fontWeight: 500
-                                }
+                                  color: "#475569",
+                                  fontWeight: 500,
+                                },
                               }}
                             />
                           </ListItem>
                         )}
                         {country.point3 && (
-                          <ListItem sx={{ display: 'list-item', py: 1.5 }}>
-                            <ListItemText 
+                          <ListItem sx={{ display: "list-item", py: 1.5 }}>
+                            <ListItemText
                               primary={country.point3}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '1.2rem',
+                                "& .MuiListItemText-primary": {
+                                  fontSize: "1.2rem",
                                   lineHeight: 1.8,
-                                  color: '#475569',
-                                  fontWeight: 500
-                                }
+                                  color: "#475569",
+                                  fontWeight: 500,
+                                },
                               }}
                             />
                           </ListItem>
@@ -478,63 +513,66 @@ const CountryDetails = () => {
                   </>
                 )}
 
-                {(country.journey1 || country.journey2 || country.journey3) && (
+                {(country.journey1 ||
+                  country.journey2 ||
+                  country.journey3 ||
+                  country.journey4) && (
                   <>
                     <Divider sx={{ my: 4 }} />
-                    <div>
-                      <Typography 
-                        variant="h5" 
-                        sx={{ 
-                          mb: 3, 
-                          fontWeight: "700", 
+                    <div style={{ marginBottom: "3rem" }}>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          mb: 3,
+                          fontWeight: "700",
                           color: "#1e293b",
-                          fontSize: "1.8rem"
+                          fontSize: "1.8rem",
                         }}
                       >
-                       {country.name}'s ETR Journey
+                        Implementation Journey
                       </Typography>
                       <List sx={{ pl: 2 }}>
                         {country.journey1 && (
-                          <ListItem sx={{ display: 'list-item', py: 1.5 }}>
-                            <ListItemText 
+                          <ListItem sx={{ display: "list-item", py: 1.5 }}>
+                            <ListItemText
                               primary={country.journey1}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '1.2rem',
+                                "& .MuiListItemText-primary": {
+                                  fontSize: "1.2rem",
                                   lineHeight: 1.8,
-                                  color: '#475569',
-                                  fontWeight: 500
-                                }
+                                  color: "#475569",
+                                  fontWeight: 500,
+                                },
                               }}
                             />
                           </ListItem>
                         )}
                         {country.journey2 && (
-                          <ListItem sx={{ display: 'list-item', py: 1.5 }}>
-                            <ListItemText 
+                          <ListItem sx={{ display: "list-item", py: 1.5 }}>
+                            <ListItemText
                               primary={country.journey2}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '1.2rem',
+                                "& .MuiListItemText-primary": {
+                                  fontSize: "1.2rem",
                                   lineHeight: 1.8,
-                                  color: '#475569',
-                                  fontWeight: 500
-                                }
+                                  color: "#475569",
+                                  fontWeight: 500,
+                                },
                               }}
                             />
                           </ListItem>
                         )}
                         {country.journey3 && (
-                          <ListItem sx={{ display: 'list-item', py: 1.5 }}>
-                            <ListItemText 
+                          <ListItem sx={{ display: "list-item", py: 1.5 }}>
+                            <ListItemText
                               primary={country.journey3}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '1.2rem',
+                                "& .MuiListItemText-primary": {
+                                  fontSize: "1.2rem",
                                   lineHeight: 1.8,
-                                  color: '#475569',
-                                  fontWeight: 500
-                                }
+                                  color: "#475569",
+                                  fontWeight: 500,
+                                },
                               }}
                             />
                           </ListItem>
@@ -548,9 +586,29 @@ const CountryDetails = () => {
           </Grid>
         </Grid>
       ) : (
-        <Typography variant="h5" sx={{ textAlign: "center", mt: 4, color: "#64748b" }}>
-          Data will be updated shortly.
-        </Typography>
+        <div style={{ textAlign: "center", padding: "50px 20px" }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: "700",
+              color: "#475569",
+              fontSize: "1.5rem",
+            }}
+          >
+            No data available for the selected country.
+          </Typography>
+          <Button
+            onClick={handleBack}
+            variant="contained"
+            sx={{
+              mt: 3,
+              backgroundColor: "#00663d",
+              "&:hover": { backgroundColor: "#004d2e" },
+            }}
+          >
+            Back to List
+          </Button>
+        </div>
       )}
     </div>
   );
