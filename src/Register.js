@@ -17,6 +17,7 @@ import {
   PersonOutline,
 } from "@mui/icons-material";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const Register = () => {
   const [form, setForm] = useState({ email: "", name: "", password: "" });
@@ -48,33 +49,108 @@ const Register = () => {
     e.preventDefault();
     setError("");
     setSuccess("");
-
+  
     if (!validateForm()) return;
-
+  
     try {
+      Swal.fire({
+        title: "Registering...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+  
       const response = await axios.post("https://mletr-tracking-backend.onrender.com/register", {
         email: form.email.trim(),
         name: form.name.trim(),
         password: form.password,
       });
-
-      setSuccess("Registration successful!");
+  
+      if (response.data.certificate) {
+        try {
+          localStorage.setItem(
+            `cert_${response.data.user.id}`,
+            JSON.stringify(response.data.certificate)
+          );
+        } catch (storageError) {
+          console.error("Error storing certificate:", storageError);
+          throw new Error("Failed to store certificate");
+        }
+      }
+  
+      if (response.data.privateKey) {
+        try {
+          localStorage.setItem(
+            `privateKey_${response.data.user.id}`,
+            response.data.privateKey
+          );
+  
+        
+          const privateKeyBlob = new Blob([response.data.privateKey], {
+            type: "text/plain",
+          });
+  
+         
+          const downloadLink = document.createElement("a");
+          downloadLink.href = URL.createObjectURL(privateKeyBlob);
+          downloadLink.download = `${response.data.user.name}-privateKey.txt`; 
+          downloadLink.click(); 
+        } catch (storageError) {
+          console.error("Error storing private key:", storageError);
+          throw new Error("Failed to store private key");
+        }
+      }
+  
+      const storedCert = localStorage.getItem(`cert_${response.data.user.id}`);
+      const storedKey = localStorage.getItem(
+        `privateKey_${response.data.user.id}`
+      );
+  
+      if (!storedCert || !storedKey) {
+        throw new Error("Failed to verify stored credentials");
+      }
+  
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
       }
+  
       setForm({ email: "", name: "", password: "" });
+  
+      Swal.fire({
+        icon: "success",
+        title: "Registration Successful!",
+        text: "You can now log in with your credentials.",
+        confirmButtonText: "OK",
+      });
+  
+      setSuccess("Registration successful!");
+  
+      console.log("Stored Certificate:", JSON.parse(storedCert));
+      console.log("Stored Private Key:", storedKey);
     } catch (error) {
-      if (error.response) {
-        setError(
-          error.response.data.error || "Registration failed. Please try again."
-        );
-      } else if (error.request) {
-        setError("No response from server. Please try again later.");
-      } else {
-        setError("An error occurred. Please try again.");
+      Swal.close();
+  
+      let errorMessage = "An error occurred during registration.";
+  
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+  
+      console.error("Registration error:", error);
+  
+      Swal.fire({
+        icon: "error",
+        title: "Registration Failed",
+        text: errorMessage,
+      });
+  
+      setError(errorMessage);
     }
   };
+  
 
   return (
     <Grid container sx={{ height: "100vh" }}>
@@ -285,7 +361,7 @@ const Register = () => {
                       borderWidth: 2,
                     },
                     "& input": {
-                      pr: 1, 
+                      pr: 1,
                     },
                   },
                 }}

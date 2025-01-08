@@ -46,7 +46,7 @@ const Map = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // const response = await fetch("http://localhost:5001/geojson");
+        // const response = await fetch("https://mletr-tracking-backend.onrender.com/geojson");
         const token = localStorage.getItem("token");
         const response = await fetch("https://mletr-tracking-backend.onrender.com/geojson", {
           headers: {
@@ -96,7 +96,7 @@ const Map = () => {
   ];
   useEffect(() => {
     if (!isLoggedIn) {
-      const authToken = localStorage.getItem("authToken");
+      const authToken = localStorage.getItem("token");
       if (!authToken) {
         navigate("/login");
       }
@@ -105,7 +105,7 @@ const Map = () => {
 
   const handleLoginLogout = () => {
     if (isLoggedIn) {
-      localStorage.removeItem("authToken");
+      localStorage.removeItem("token");
       setIsLoggedIn(false);
     } else {
       navigate("/login");

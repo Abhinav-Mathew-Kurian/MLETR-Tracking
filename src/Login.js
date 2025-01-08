@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextField, Button, Box, Typography, Grid, Paper, Container, Divider } from "@mui/material";
-import {  Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { LockOutlined, EmailOutlined } from "@mui/icons-material";
@@ -14,23 +14,37 @@ const Login = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async () => {
 
+  
+  const handleSubmit = async () => {
     Swal.fire({
       title: "Logging in...",
       text: "Please wait while we process your request",
       didOpen: () => {
         Swal.showLoading();
       },
-      allowOutsideClick: false, 
+      allowOutsideClick: false,
     });
-
-    try {
-      const res = await axios.post("https://mletr-tracking-backend.onrender.com/login", form);
+  
+    try {    
+      const loginResponse = await axios.post("https://mletr-tracking-backend.onrender.com/login", {
+        email: form.email, 
+        password: form.password,
+      });
+  
+      const cert = localStorage.getItem(`cert_${loginResponse.data.user.id}`);
+      if (!cert) {
+        throw new Error("Certificate not found. Please contact support.");
+      }
+      
+  
   
       Swal.close();
-      localStorage.setItem("token", res.data.token);
-      console.log(res.data.token)
+      localStorage.setItem("token", loginResponse.data.token);
+      console.log(cert)
+      console.log("JWT Token:", loginResponse.data.token);
+    
+  
       Swal.fire({
         icon: "success",
         title: "Logged in successfully",
@@ -38,22 +52,22 @@ const Login = () => {
         timer: 1500,
         showConfirmButton: false,
       });
-
+  
       setTimeout(() => {
         navigate("/");
       }, 1500);
     } catch (error) {
-     
       Swal.close();
       console.error(error);
+  
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: "There was an error during login. Please try again.",
+        text: error.message || "There was an error during login. Please try again.",
       });
     }
   };
-
+  
   return (
     <Grid container sx={{ height: "100vh" }}>
       {/* Left side content */}
