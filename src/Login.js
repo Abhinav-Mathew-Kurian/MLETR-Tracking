@@ -32,18 +32,10 @@ const Login = () => {
         password: form.password,
       });
   
-      const cert = localStorage.getItem(`cert_${loginResponse.data.user.id}`);
-      if (!cert) {
-        throw new Error("Certificate not found. Please contact support.");
-      }
-      
-  
-  
       Swal.close();
       localStorage.setItem("token", loginResponse.data.token);
-      console.log(cert)
+      console.log("Certificate valid until:", loginResponse.data.certificate.validTo);
       console.log("JWT Token:", loginResponse.data.token);
-    
   
       Swal.fire({
         icon: "success",
@@ -63,7 +55,7 @@ const Login = () => {
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: error.message || "There was an error during login. Please try again.",
+        text: error.response?.data?.error || "There was an error during login. Please try again.",
       });
     }
   };

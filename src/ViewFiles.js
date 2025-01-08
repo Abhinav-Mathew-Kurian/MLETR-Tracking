@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Card,
@@ -10,17 +11,20 @@ import {
   Container,
   CardMedia,
   Tooltip,
+  IconButton,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Swal from "sweetalert2";
 
 function ViewFiles() {
   const [files, setFiles] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("https://mletr-tracking-backend.onrender.com/files")
+      .get("https://mletr-tracking-backend.onrender.com/api/files")
       .then((response) => setFiles(response.data))
       .catch((error) => {
         console.error("Error fetching files:", error);
@@ -71,7 +75,6 @@ function ViewFiles() {
         }
       );
   
-     
       const blob = new Blob([response.data], {
         type: response.headers["content-type"] || "application/octet-stream",
       });
@@ -106,10 +109,7 @@ function ViewFiles() {
   
     } catch (error) {
       console.error("Error downloading file:", error);
-     
       Swal.close();
-  
-    
       Swal.fire({
         icon: "error",
         title: "Download Failed",
@@ -121,6 +121,22 @@ function ViewFiles() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      <IconButton
+        onClick={() => navigate('/')}
+        sx={{
+          position: 'absolute',
+          left: { xs: 16, sm: 24 },
+          top: { xs: 16, sm: 24 },
+          backgroundColor: 'background.paper',
+          boxShadow: 1,
+          '&:hover': {
+            backgroundColor: 'background.paper',
+            boxShadow: 2,
+          },
+        }}
+      >
+        <ArrowBackIcon />
+      </IconButton>
       <Typography
         variant="h3"
         component="h1"

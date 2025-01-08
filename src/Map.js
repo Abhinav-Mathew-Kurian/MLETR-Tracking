@@ -205,7 +205,12 @@ const Map = () => {
     setZoom(newZoom);
     setCenter(coordinates);
   };
-
+const handleUpload=()=>{
+  navigate('/file-upload')
+}
+const handleView=()=>{
+  navigate('/view-file')
+}
   if (error) {
     return (
       <Box
@@ -343,7 +348,7 @@ const Map = () => {
     );
   }
 
-  return (
+  return (<>
     <Box
       sx={{
         height: "100vh",
@@ -612,6 +617,8 @@ const Map = () => {
         </Box>
       </Box>
     </Box>
+    <Button onClick={handleUpload}>Upload Files</Button><Button onClick={handleView}>View Files</Button>
+    </>
   );
 };
 
