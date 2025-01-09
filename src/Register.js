@@ -66,7 +66,7 @@ const Register = () => {
       //   name: form.name.trim(),
       //   password: form.password,
       // });
-      const response = await axios.post("http://localhost:5001/register", {
+      const response = await axios.post("https://mletr-tracking-backend.onrender.com/register", {
         email: form.email.trim(),
         name: form.name.trim(),
         password: form.password,

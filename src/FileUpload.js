@@ -140,13 +140,13 @@ const FileUpload = () => {
     setSuccess("");
 
     try {
-      // Read the file as ArrayBuffer
+   
       const fileBuffer = await selectedFile.arrayBuffer();
 
-      // Add digital signature to PDF
+     
       const signedPdfBytes = await addDigitalSignature(fileBuffer);
 
-      // Create new File object with signed PDF
+
       const signedFile = new File([signedPdfBytes], selectedFile.name, {
         type: "application/pdf",
       });
@@ -156,7 +156,7 @@ const FileUpload = () => {
       formData.append("publicKey", publicKey);
 
       const response = await axios.post(
-        "http://localhost:5001/api/upload",
+        "https://mletr-tracking-backend.onrender.com/api/upload",
         formData,
         {
           headers: {

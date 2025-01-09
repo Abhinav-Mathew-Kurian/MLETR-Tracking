@@ -24,7 +24,7 @@ function ViewFiles() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5001/api/files")
+      .get("https://mletr-tracking-backend.onrender.com/api/files")
       .then((response) => setFiles(response.data))
       .catch((error) => {
         console.error("Error fetching files:", error);
