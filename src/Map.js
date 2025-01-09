@@ -25,7 +25,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { CircularProgress, Backdrop, Skeleton, Stack } from "@mui/material";
-
+import Swal from "sweetalert2";
 const Map = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -48,7 +48,7 @@ const Map = () => {
         setLoading(true);
         // const response = await fetch("https://mletr-tracking-backend.onrender.com/geojson");
         const token = localStorage.getItem("token");
-        const response = await fetch("https://mletr-tracking-backend.onrender.com/geojson", {
+        const response = await fetch("http://localhost:5001/geojson", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -106,6 +106,7 @@ const Map = () => {
   const handleLoginLogout = () => {
     if (isLoggedIn) {
       localStorage.removeItem("token");
+      localStorage.removeItem("signature")
       setIsLoggedIn(false);
     } else {
       navigate("/login");
@@ -211,34 +212,24 @@ const handleUpload=()=>{
 const handleView=()=>{
   navigate('/view-file')
 }
-  if (error) {
-    return (
-      <Box
-        sx={{
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#e6ffff",
-        }}
-      >
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            textAlign: "center",
-            maxWidth: 400,
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-          }}
-        >
-          <Typography variant="h6" color="error" gutterBottom>
-            Unable to Load Map Data
-          </Typography>
-          <Typography color="text.secondary">{error}</Typography>
-        </Paper>
-      </Box>
-    );
-  }
+if (error) {
+  Swal.fire({
+    title: 'Unable to process map',
+    text: 'Please try login again!',
+    icon: 'error',
+    confirmButtonText: 'Go to Login',
+    confirmButtonColor: '#3085d6',
+    allowOutsideClick: false,
+    backdrop: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      
+      navigate('/login');
+      
+    }
+  });
+  return null; 
+}
 
   if (loading) {
     return (

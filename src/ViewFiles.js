@@ -24,7 +24,7 @@ function ViewFiles() {
 
   useEffect(() => {
     axios
-      .get("https://mletr-tracking-backend.onrender.com/api/files")
+      .get("http://localhost:5001/api/files")
       .then((response) => setFiles(response.data))
       .catch((error) => {
         console.error("Error fetching files:", error);
@@ -67,7 +67,7 @@ function ViewFiles() {
       });
   
       const response = await axios.post(
-        "https://mletr-tracking-backend.onrender.com/api/download",
+        "http://localhost:5001/api/download",
         { fileId, privateKey: privateKey.trim() },
         {
           responseType: "blob",
