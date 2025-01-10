@@ -48,7 +48,7 @@ const Map = () => {
         setLoading(true);
         // const response = await fetch("https://mletr-tracking-backend.onrender.com/geojson");
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5001/geojson", {
+        const response = await fetch("https://mletr-tracking-backend.onrender.com/geojson", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
